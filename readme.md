@@ -120,11 +120,7 @@ probe THREAD/telemetry
 
 | Function | Parameters | Description |
 | --- | --- | --- |
-| `spawn` | `id [integer! string! word!]`<br>
-
-<br>`slice-duration [time!]`<br>
-
-<br>`inner-obj [object!]` | Registers a new task wrapper into the engine. `inner-obj` must contain a `task-func`. |
+| `spawn` | `id [integer! string! word!]` `slice-duration [time!]` `inner-obj [object!]` | Registers a new task wrapper into the engine. `inner-obj` must contain a `task-func`. |
 | `run` | `/tick-delay delay [time!]` | Begins execution loop. Optional `/tick-delay` adds a wait step per tick cycle. |
 | `stop` | *None* | Halts the active execution loop. |
 | `reset` | *None* | Clears all registered tasks, resets metrics and global tick count to `0`. |
