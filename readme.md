@@ -46,98 +46,69 @@ A lightweight, single-threaded cooperative runtime for [Red](https://www.red-lan
 Tasks yield control back to the scheduler using signals returned from `task-func`:
 
 * `'yield` or `'continue`: Relinquishes the current time-slice or continues iteration within budget.
-* `'sleep`: Suspends execution for a designated tick count or timestamp.
+* `'sleep`: Suspends execution for a designated tick count or time-duration.
 * `'finished`: Marks the task as completed (`'done`) and records final execution ticks.
 
 ---
 
 ## Quickstart Example
 
-Save as `main.red` alongside `scheduler.red`:
+Save as `main.red` alongside `thread.red`:
 
 ```red
 Red []
 
-#include %scheduler.red
+#include %thread.red
 
-; 1. Create a bounded channel with capacity of 3
-CHAN: make-channel 3
+CHANNEL: make-channel 3
 
-; 2. Spawn Producer Task
-SCHEDULER/spawn 'READER 00:00:00.01 object [
-    buf: none
-    step: 'start
-    
-    task-func: func [/local self lines][
-        self: SCHEDULER/task
-        
-        switch step [
-            start [ 
-                buf: ["Line 1" "Line 2" "Line 3"]
-                step: 'push-channel 
-                return 'yield 
-            ]
-            push-channel [ 
-                CHAN/put take buf 
-                step: 'check-eof 
-                return 'yield 
-            ]
-            check-eof [ 
-                either empty? buf [ step: 'how-many ] [ step: 'push-channel ]
-                return 'yield
-            ]
-            how-many [ 
-                self/send-mail 'PRINTER "How many lines?"
-                step: 'check-count 
-                return 'yield 
-            ]
-            check-count [ 
-                either empty? lines: self/read-mail [
-                    step: 'check-count 
-                    return 'yield
-                ][
-                    print ["Total Lines Processed:" lines]
-                    return self/finish/telemetry
-                ] 
-            ]
-        ]
-    ]
+THREAD/spawn 'READER 00:00:00.01 object [
+	buf: 	none
+	step:	'start
+	task-func: func [/local self] [ self: THREAD/task
+		switch step [
+			start 		 [ buf: read/lines %input.txt			step: 'push-channel	]
+			push-channel [ CHANNEL/put take buf					step: 'check-eof	]
+			check-eof	 [ either empty? buf [ step: 'how-many ]
+											 [ step: 'push-channel ] ] 
+			how-many 	 [ self/send-mail 'PRINTER "How many?"	step: 'check-count	]
+			check-count  [ either empty? lines: self/read-mail [ step: 'check-count ]
+															   [ print ["Lines:" lines]
+																 return 'finished ] ]
+		]
+		'yield
+	]
 ]
 
-; 3. Spawn Consumer Task
-SCHEDULER/spawn 'PRINTER 00:00:00.01 object [
-    step: 1
-    count: 0
-    
-    task-func: func [/local self item mail][
-        self: SCHEDULER/task
-        
-        switch step [
-            1 [ 
-                unless CHAN/is-empty? [
-                    item: CHAN/get
-                    count: count + 1
-                    print ["Printed:" item]
-                ]
-                step: 2 
-                return 'yield
-            ]
-            2 [ 
-                mail: self/read-mail 
-                either mail = "How many lines?" [
-                    self/send-mail 'READER form count
-                    return self/finish/telemetry
-                ][
-                    step: 1 
-                    return 'yield
-                ]
-            ]
-        ]
-    ]
+THREAD/spawn 'PRINTER 00:00:00.01 object [
+	step: 1
+	count: 0
+	task-func: func [/local self item] [ self: THREAD/task
+		switch step [
+			1 [ unless CHANNEL/ch-empty? [ 
+					item: CHANNEL/get  
+					count: count + 1  
+					print item 
+				]
+				step: 2
+			  ]
+			2 [ mail: self/read-mail 
+				either mail = "How many?" [
+					self/send-mail 'READER form count
+					return 'finished
+				][ step: 1 ]
+			  ]
+		]
+		'yield
+	]
 ]
 
-; 4. Execute Scheduler Loop
-SCHEDULER/run/tick-delay 00:00:00.01
+THREAD/run/tick-delay 00:00:00.01
+
+print "^/Task Telemetry:"
+probe THREAD/task-telemetry THREAD/get-task 'READER
+probe THREAD/task-telemetry THREAD/get-task 'PRINTER
+probe THREAD/telemetry
 
 ```
 
@@ -145,7 +116,7 @@ SCHEDULER/run/tick-delay 00:00:00.01
 
 ## API Documentation
 
-### 1. Scheduler Control (`SCHEDULER`)
+### 1. Scheduler Control (`THREAD`)
 
 | Function | Parameters | Description |
 | --- | --- | --- |
@@ -166,10 +137,10 @@ SCHEDULER/run/tick-delay 00:00:00.01
 
 ### 2. Task Context Methods (`self` inside task)
 
-Every task wrapped by `SCHEDULER/spawn` has access to these context methods:
+Every task wrapped by `THREAD/spawn` has access to these context methods:
 
 ```red
-self: SCHEDULER/task
+self: THREAD/task
 
 ```
 
@@ -180,7 +151,7 @@ self: SCHEDULER/task
 | `peek-mail` | *None* | Views the next pending message without removing it. |
 | `publish` | `msg [any-type!]` | Broadcasts `msg` to all tasks via `SCHEDULER/broadcast`. |
 | `sleep-ticks` | `n [integer!]` | Transitions task state to `'waiting` for `n` scheduler ticks. |
-| `sleep-until` | `t [time!]` | Transitions task state to `'waiting` until real time reaches `t`. |
+| `sleep` | `t [time!]` | Transitions task state to `'waiting` for real time duration `t`. |
 | `finish` | `/telemetry` | Immediately sets task state to `'done'`, records completed tick/time, optionally probes `task-telemetry`, and returns `'finished`. |
 
 ---
@@ -194,10 +165,10 @@ Created via `CHAN: make-channel <capacity>`.
 | `put val` | `logic!` | Appends `val` to buffer. Returns `true` if successful, `false` if buffer is full. |
 | `get` | `any-type!` | Pops and returns the head item. Returns `none` if empty. |
 | `peek` | `any-type!` | Inspects the head item without removing it. |
-| `full?` | `logic!` | Returns `true` if channel has reached max capacity. |
-| `is-empty?` | `logic!` | Returns `true` if buffer length is `0`. |
+| `ch-full?` | `logic!` | Returns `true` if channel has reached max capacity. |
+| `ch-empty?` | `logic!` | Returns `true` if buffer length is `0`. |
 | `count` | `integer!` | Returns current number of unread items in buffer. |
-| `clear-ch` | `block!` | Clears all items currently in the buffer. |
+| `ch-clear` | `block!` | Clears all items currently in the buffer. |
 | `telemetry` | `map!` | Returns `map!` containing capacity, count, `total-puts`, and `total-gets`. |
 
 ---
