@@ -145,7 +145,7 @@ self: THREAD/task
 | `send-mail` | `target [id]` `msg [any-type!]` | Pushes a message directly into the mailbox of `target`. |
 | `read-mail` | *None* | Pops and returns the oldest message from the task's mailbox (`none` if empty). |
 | `peek-mail` | *None* | Views the next pending message without removing it. |
-| `publish` | `msg [any-type!]` | Broadcasts `msg` to all tasks via `SCHEDULER/broadcast`. |
+| `publish` | `msg [any-type!]` | Broadcasts `msg` to all tasks via `THREAD/broadcast`. |
 | `sleep-ticks` | `n [integer!]` | Transitions task state to `'waiting` for `n` scheduler ticks. |
 | `sleep` | `t [time!]` | Transitions task state to `'waiting` for real time duration `t`. |
 | `finish` | `/telemetry` | Immediately sets task state to `'done'`, records completed tick/time, optionally probes `task-telemetry`, and returns `'finished`. |
