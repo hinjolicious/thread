@@ -175,7 +175,7 @@ Created via `CHAN: make-channel <capacity>`.
 
 ## Telemetry Metrics Guide
 
-### System Telemetry Map (`SCHEDULER/telemetry`)
+### System Telemetry Map (`THREAD/telemetry`)
 
 ```red
 #[
@@ -195,7 +195,7 @@ Created via `CHAN: make-channel <capacity>`.
 
 ```
 
-### Task Telemetry Map (`SCHEDULER/task-telemetry`)
+### Task Telemetry Map (`THREAD/task-telemetry`)
 
 ```red
 #[
