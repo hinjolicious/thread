@@ -22,7 +22,7 @@ A lightweight, single-threaded cooperative runtime for [Red](https://www.red-lan
 
 ```
                           ┌───────────────────────────┐
-                          │   SCHEDULER Step Loop     │
+                          │      THREAD Step Loop     │
                           └─────────────┬─────────────┘
                                         │
                  ┌──────────────────────┴──────────────────────┐
