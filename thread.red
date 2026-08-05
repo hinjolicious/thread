@@ -1,6 +1,6 @@
 Red [
 	Title:		"Cooperative Micro-Threading Library for Red"
-	Author:		"Hindra Joshua"
+	Author:		"hinjolicious"
 	File:		%thread.red
 	Description: {
 		Cooperative micro-thread scheduler using Red map! for O(1) task 
@@ -62,6 +62,7 @@ THREAD: context [
 	task:			 none		  ; current active task
 	running?:		 false
 	tick:			 0
+	on-tick:		 none ; <-- universal hook for visualization, etc.
 	
 	; Global Telemetry Counters
 	total-slices:	 0
@@ -233,6 +234,8 @@ THREAD: context [
 				][ break ] ; default fallback
 			]
 		] ; /foreach tasks loop
+		
+		if :on-tick [ on-tick ] ; <-- executes after all coroutines complete 1 tick
 	] ; /step-func
 
 	; --- Scheduler Controls --- 
@@ -249,6 +252,7 @@ THREAD: context [
 				running?: 	  false 
 				run-end-time: now/time/precise
 			]
+			do-events/no-wait ; <-- let other events fires
 		]
 	]
 	
@@ -296,13 +300,15 @@ THREAD: context [
 			active-tasks		(active)
 			waiting-tasks		(waiting)
 			done-tasks			(done)
+			broadcast-count		(broadcast-count)
+
+			avg-slice-cpu		(avg-slice)
 			total-slices		(total-slices)
 			total-execs			(total-execs)
+			
 			total-cpu-time		(total-cpu)
 			total-wall-time		(wall-t)
-			avg-slice-cpu		(avg-slice)
-			cpu-utilization-pct (cpu-pct)
-			broadcast-count		(broadcast-count)
+			cpu-utilization-pct (cpu-pct)		; total-cpu-time / total-wall-time
 		]
 	]
 	
@@ -323,21 +329,23 @@ THREAD: context [
 		make map! compose [
 			id					(t/id)
 			state				(t/state)
-			budget-slice		(t/slice)
-			total-ticks			(total-k)
-			created-tick		(t/created-tick)
-			completed-tick		(t/completed-tick)
-			total-slices		(t/slice-count)
-			exec-count			(t/exec-count)
 			sleep-count			(t/sleep-count)
 			mail-sent			(t/mail-sent)
 			mail-recv			(t/mail-recv)
 			broadcast-sent		(t/broadcast-sent)
 			mailbox-pending		(length? t/mailbox)
+			
+			created-tick		(t/created-tick)
+			completed-tick		(t/completed-tick)
+			total-ticks			(total-k)
+			total-slices		(t/slice-count)
+
+			budget-slice		(t/slice)			
+			avg-slice-cpu		(avg-slice)
+			avg-exec-cpu		(avg-exec)
+			exec-count			(t/exec-count)
 			cpu-time			(t/cpu-time)
 			wall-time			(wall-t)
-			avg-exec-cpu		(avg-exec)
-			avg-slice-cpu		(avg-slice)
 		]
 	]
 ]
