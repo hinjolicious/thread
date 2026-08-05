@@ -302,10 +302,10 @@ THREAD: context [
 			done-tasks			(done)
 			broadcast-count		(broadcast-count)
 
-			avg-slice-cpu		(avg-slice)
 			total-slices		(total-slices)
 			total-execs			(total-execs)
 			
+			avg-slice-cpu		(avg-slice)
 			total-cpu-time		(total-cpu)
 			total-wall-time		(wall-t)
 			cpu-utilization-pct (cpu-pct)		; total-cpu-time / total-wall-time
@@ -339,11 +339,11 @@ THREAD: context [
 			completed-tick		(t/completed-tick)
 			total-ticks			(total-k)
 			total-slices		(t/slice-count)
+			exec-count			(t/exec-count)
 
 			budget-slice		(t/slice)			
 			avg-slice-cpu		(avg-slice)
 			avg-exec-cpu		(avg-exec)
-			exec-count			(t/exec-count)
 			cpu-time			(t/cpu-time)
 			wall-time			(wall-t)
 		]

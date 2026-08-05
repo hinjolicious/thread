@@ -301,7 +301,7 @@ init-simulation: func [][
 ]
 
 ;win: view/tight/no-sync/no-wait [
-win: view/tight/no-sync [
+view/tight/no-sync [
 	title "Dining Philosophers - Ego Dynamics Simulation (THREAD)"
 	canvas-face: box with [size: as-pair canvas-size canvas-size] black 
 	return
