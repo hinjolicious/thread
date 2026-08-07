@@ -1,9 +1,9 @@
 Red [
-	title: "Synchronous concurrency"
+	title: "Concurrent Computing"
 	author: "hinjolicious"
 ]
 
-#include %thread.red
+#include %../thread.red
 
 foreach msg ["Enjoy" "Rosetta" "Code"] [
 	THREAD/spawn msg to-time 0.001 object [

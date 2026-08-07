@@ -3,7 +3,7 @@ Red [
 	author: "hinjolicious"
 ]
 
-#include %thread.red
+#include %../thread.red
 
 CHANNEL: make-channel 3
 

@@ -2,7 +2,7 @@ Red [
 	Title: "Dining Philosophers - Ego Dynamics Simulation (THREAD)"
 ]
 
-#include %THREAD.red
+#include %../THREAD.red
 
 PHILOSOPHERS: [
 	"Ptahhotep" "Kagemni" "Zarathustra" "Moses" "Laozi" "Confucius" "Sun Tzu" 
